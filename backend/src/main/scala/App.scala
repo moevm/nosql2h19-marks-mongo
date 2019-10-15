@@ -9,8 +9,8 @@ object App {
   def main(args: Array[String]): Unit = {
 
     val config = ConfigFactory.load("application")
-    val serverHost = config.getString("server_host")
-    val serverPort = config.getInt("server_port")
+    val serverHost = "localhost"
+    val serverPort = 8080
 
     val mongoClient = new ClientMongoImpl()
     val bindingFuture = Http().bindAndHandle(Router.routes(mongoClient), serverHost, serverPort)
