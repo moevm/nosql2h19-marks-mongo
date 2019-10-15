@@ -11,7 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait ClientMongo {
   def addStudent(student: Student): Future[String]
 
-  def getStudents: Future[Seq[String]]
+  def getStudents: Future[Seq[Option[Student]]]
 }
 
 class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
@@ -25,12 +25,15 @@ class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
 
   override def addStudent(student: Student): Future[String] = {
     collection.insertOne(Document(student.asJson)).toFuture().recover {
-      case e: Throwable => println("Error: " + e.getMessage)
+      case e: Throwable => s"Error: ${e.getMessage}"
     }.map(_ => s"Student was added succesfully")
   }
 
-  override def getStudents: Future[Seq[String]] = {
-    collection.find().toFuture().map(seq => seq.map(_.toJson()))
+  override def getStudents: Future[Seq[Option[Student]]] = {
+    collection.find().toFuture().map(seq => seq.map(bsonStudent => bsonStudent.toJson().jsonAs[Student] match {
+      case Right(student) => Some(student)
+      case _ => None
+    }))
   }
 }
 
