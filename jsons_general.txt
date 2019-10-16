@@ -1,0 +1,70 @@
+Faculty:{
+	“name” : “string”
+}
+Department:{
+	“name” : “string”
+}
+Group: {
+	“number”: int,
+	“nameFaculty” : “string”,
+	“nameDepartment” : “string” 
+}
+Semester: {
+	“number” : int
+}
+Course:{
+	“id” : int,
+	“name” : “string”  
+}
+Mark:{
+	“idStudent” : int,
+	“mark” : int,
+	“numberSemester” : int,
+	“idCourse” : int
+}
+Teacher:{
+	“id” : int,
+	“departments” : [{
+		“name” : “string”
+	},
+	{
+		“name” : “string”
+	}]
+}
+CourseTeacher: {
+	“idCourse” : int,
+	“teachers” : [{
+		“id” : int
+	},
+	{
+		“id” : int
+	}]
+}
+Student:{
+	“id” : int,
+	“name” : “string”,
+	“surname” : “string”,
+	“sex” : “string”,
+	“groups” : [{
+		“number”: int,
+		“facultyName” : “string”,
+		“departmentName” : “string” 
+	},
+	{
+		“number”: int,
+		“facultyName” : “string”,
+		“departmentName” : “string” 
+	}] ,
+	“marks” : [{
+		“idStudent” : int,
+		“mark” : int,
+		“numberSemester” : int,
+		“idCourse” : “string”
+	},
+	{
+		“idStudent” : int,
+		“mark” : int,
+		“numberSemester” : int,
+		“idCourse” : “string”
+	}]
+}

@@ -1,0 +1,88 @@
+Faculty:
+{
+	“name” : “ФКТИ”
+}
+
+Department:
+{
+	“name” : “МО ЭВМ”
+}
+
+Group: 
+{
+	“number”: 123,
+	“nameFaculty” : “ФКТИ”,
+	“nameDepartment” : “МО ЭВМ” 
+}
+
+Semester: 
+{
+	“number” : 1
+}
+
+Course:
+{
+	“id” : 123,
+	“name” : “Нереляционные базы данных”  
+}
+
+Mark:
+{
+	“idStudent” : 123,
+	“mark” : 5,
+	“numberSemester” : 1,
+	“idCourse” : 123
+}
+
+Teacher:
+{
+	“id” : 123,
+	“departments” : [{
+		“name” : “МО ЭВМ”
+	},
+	{
+		“name” : “ВМ”
+	}]
+}
+
+CourseTeacher: 
+{
+	“idCourse” : 1,
+	“teachers” : [{
+		“id” : 124
+	},
+	{
+		“id” : 125
+	}]
+}
+
+
+Student:
+{
+	“id” : 123,
+	“name” : “Veronika”,
+	“surname” : “Veroha”,
+	“sex” : “Ж”,
+	“groups” : [{
+		“number”: 123,
+		“facultyName” : “ФКТИ”,
+		“departmentName” : “МО ЭВМ” 
+	},
+	{
+		“number”: 1234,
+		“facultyName” : “ФКТИ”,
+		“departmentName” : “МО ЭВМ” 
+	}] ,
+	“marks” : [{
+		“idStudent” : 123,
+		“mark” : 5,
+		“numberSemester” : 1,
+		“idCourse” : “Нереляционные базы данных”
+	},
+	{
+		“idStudent” : 123,
+		“mark” : 5,
+		“numberSemester” : 2,
+		“idCourse” : “Базы данных”
+	}]
+}
