@@ -1,7 +1,8 @@
 package data
 
-case class Student(name: String,
-              surname: String,
-              lastname: String,
-              group: Int,
-              sex: String)
+case class Student(id: String,
+                   name: String,
+                   surname: String,
+                   sex: String,
+                   groups: Seq[Int],
+                   marks: Seq[Mark] = Seq.empty)
