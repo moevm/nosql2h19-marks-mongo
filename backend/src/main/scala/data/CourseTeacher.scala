@@ -1,3 +1,3 @@
 package data
 
-case class CourseTeacher(idCourse: Int, teachers: Seq[Teacher])
+case class CourseTeacher(idCourse: String, idTeacher: String)
