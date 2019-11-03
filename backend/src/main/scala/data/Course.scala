@@ -1,3 +1,3 @@
 package data
 
-case class Course(id: String, name: String)
+case class Course(name: String)
