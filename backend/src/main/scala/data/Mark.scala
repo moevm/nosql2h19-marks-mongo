@@ -1,6 +1,5 @@
 package data
 
-case class Mark(idStudent: Int,
-                mark: Int,
+case class Mark(mark: Int,
                 semester: Semester,
-                idCourse: Int)
+                course: Course)

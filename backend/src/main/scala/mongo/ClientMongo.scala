@@ -1,6 +1,6 @@
 package mongo
 
-import data.{Course, CourseTeacher, Department, Faculty, Student, Teacher}
+import data.{Course, Department, Faculty, Group, Mark, Semester, Student}
 
 import scala.concurrent.Future
 
@@ -13,7 +13,11 @@ trait ClientMongo {
 
   def getCourses: Future[Seq[Option[Course]]]
 
+  def getCourseByName(courseName: String): Future[Option[Course]]
+
   def addFaculty(faculty: Faculty): Future[String]
+
+  def getFacultyByName(facultyName: String): Future[Option[Faculty]]
 
   def getFaculties: Future[Seq[Option[Faculty]]]
 
@@ -21,11 +25,19 @@ trait ClientMongo {
 
   def getDepartments: Future[Seq[Option[Department]]]
 
-  def addTeacher(teacher: Teacher): Future[String]
+  def getDepartmentByName(departmentName: String): Future[Option[Department]]
 
-  def getTeachers: Future[Seq[Option[Teacher]]]
+  def addGroup(group: Group): Future[String]
 
-  def addCourseTeacher(courseTeacher: CourseTeacher): Future[String]
+  def getGroups: Future[Seq[Option[Group]]]
 
-  def getCourseTeachers: Future[Seq[Option[CourseTeacher]]]
+  def getGroupByNumber(number: Int): Future[Option[Group]]
+
+  def addMark(studentId: String, mark: Mark): Future[String]
+
+  def addSemester(semester: Semester): Future[String]
+
+  def getSemesters: Future[Seq[Option[Semester]]]
+
+  def getSemester(year: Int, period: String): Future[Option[Semester]]
 }
