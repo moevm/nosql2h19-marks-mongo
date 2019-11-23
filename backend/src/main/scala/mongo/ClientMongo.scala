@@ -1,6 +1,6 @@
 package mongo
 
-import data.{Course, Department, Faculty, Group, Mark, Semester, Student}
+import data.{Course, Department, Faculty, FacultyAverage, FacultyMarkStatistic, Group, GroupAverage, Mark, Semester, Student}
 
 import scala.concurrent.Future
 
@@ -40,4 +40,12 @@ trait ClientMongo {
   def getSemesters: Future[Seq[Option[Semester]]]
 
   def getSemester(year: Int, period: String): Future[Option[Semester]]
+
+  def facultyMarks(facultyName: String): Future[Set[FacultyMarkStatistic]]
+
+  def semesterMarks(year: Int, period: String): Future[Set[FacultyMarkStatistic]]
+
+  def facultiesAverage: Future[Seq[FacultyAverage]]
+
+  def groupsAverage(facultyName: String): Future[Seq[GroupAverage]]
 }

@@ -146,6 +146,61 @@ class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
       case e: Throwable => s"Error: ${e.getMessage}"
     }.map(_ => s"Mark was added successfully")
   }
+
+  override def facultyMarks(facultyName: String): Future[Set[FacultyMarkStatistic]] = for {
+    groups <- facultyGroups(facultyName)
+    students <- Future.sequence(groups.map(group => groupStudents(group.number))).map(_.flatten.toSet)
+    marks = students.flatMap(_.marks.map(_.mark))
+    statistic = marks.map(mark => {
+      val boysCount = students.filter(_.sex).foldLeft(0)((acc, student) => acc + student.marks.count(_.mark == mark))
+      val girlsCount = students.filterNot(_.sex).foldLeft(0)((acc, student) => acc + student.marks.count(_.mark == mark))
+      FacultyMarkStatistic(mark, boysCount, girlsCount, boysCount + girlsCount)
+    })
+  } yield statistic
+
+  override def semesterMarks(year: Int, period: String): Future[Set[FacultyMarkStatistic]] = for {
+    students <- getStudents.map(_.flatten)
+    marks = students.flatMap(_.marks.map(_.mark)).toSet
+    statistic = marks.map(mark =>{
+      val boysCount = students.filter(_.sex).foldLeft(0)((acc, student) =>
+        acc + student.marks.count(mrk => mrk.mark == mark && mrk.semester.year == year && mrk.semester.period == period))
+      val girlsCount = students.filterNot(_.sex).foldLeft(0)((acc, student) =>
+        acc + student.marks.count(mrk => mrk.mark == mark && mrk.semester.year == year && mrk.semester.period == period))
+      FacultyMarkStatistic(mark, boysCount, girlsCount, boysCount + girlsCount)
+    })
+  } yield statistic
+
+  private def facultyGroups(facultyName: String): Future[Seq[Group]] = {
+    groups.find(equal("nameFaculty", facultyName)).toFuture().map(_.flatMap(_.toJson().jsonAs[Group] match {
+      case Right(group) => Some(group)
+      case _ => None
+    }))
+  }
+  private def groupStudents(groupNumber: Int): Future[Seq[Student]] = for {
+    allStudents <- getStudents.map(_.flatten)
+    groupStudents = allStudents.filter(_.groups.contains(groupNumber))
+  } yield groupStudents
+
+  private def facultyAverage(facultyName: String): Future[Double] = for {
+    groups <- facultyGroups(facultyName)
+    students <- Future.sequence(groups.map(group => groupStudents(group.number))).map(_.flatten.toSet)
+    (sum, n) = students.foldLeft((0, 0))((acc, student) => (acc._1 + student.marks.foldLeft(0)(_ + _.mark), acc._2 + student.marks.length))
+  } yield sum.toDouble / n
+
+  override def facultiesAverage: Future[Seq[FacultyAverage]] = for {
+    faculties <- getFaculties.map(_.flatten)
+    averages <- Future.sequence(faculties.map(faculty => facultyAverage(faculty.name).map(FacultyAverage(faculty.name, _))))
+  } yield averages
+
+  def groupsAverage(facultyName: String): Future[Seq[GroupAverage]] = for {
+    groups <- facultyGroups(facultyName).map(_.map(_.number))
+    students <- getStudents.map(_.flatten)
+    groupsAverage = groups.map(group => {
+      val groupStudents = students.filter(_.groups.contains(group))
+      val (sum, n) = groupStudents.foldLeft((0, 0))((acc, student) => (acc._1 + student.marks.foldLeft(0)(_ + _.mark), acc._2 + student.marks.length))
+      GroupAverage(group, sum.toDouble / n)
+    })
+  } yield groupsAverage
 }
 
 object ClientMongoImpl {
