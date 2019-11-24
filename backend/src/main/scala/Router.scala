@@ -2,8 +2,10 @@
 import java.util.UUID
 
 import Implicits._
+import akka.http.scaladsl.marshalling.ToResponseMarshallable
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.model.headers._
 import data._
 import mongo.ClientMongo
 
@@ -12,33 +14,38 @@ import scala.concurrent.Future
 
 object Router extends Json4sSupport {
 
+  private def withAccessControlAllowOrigin(response: ToResponseMarshallable) =
+    respondWithHeader(`Access-Control-Allow-Origin`.*) {
+      complete(response)
+    }
+
   def routes(mongoClient: ClientMongo): Route = get {
     path("students") {
-      complete(mongoClient.getStudents)
+      withAccessControlAllowOrigin(mongoClient.getStudents)
     } ~ path("courses") {
-      complete(mongoClient.getCourses)
+      withAccessControlAllowOrigin(mongoClient.getCourses)
     } ~ path("departments") {
-      complete(mongoClient.getDepartments)
+      withAccessControlAllowOrigin(mongoClient.getDepartments)
     } ~ path("faculties") {
-      complete(mongoClient.getFaculties)
+      withAccessControlAllowOrigin(mongoClient.getFaculties)
     } ~ path("groups") {
-      complete(mongoClient.getGroups)
+      withAccessControlAllowOrigin(mongoClient.getGroups)
     } ~ path("semesters") {
-      complete(mongoClient.getSemesters)
+      withAccessControlAllowOrigin(mongoClient.getSemesters)
     } ~ path("statistic" / "faculty_marks") {
       parameter("faculty") { faculty =>
-        complete(mongoClient.facultyMarks(faculty))
+        withAccessControlAllowOrigin(mongoClient.facultyMarks(faculty))
       }
     } ~ path("statistic" / "semester_marks") {
       parameter("year".as[Int], "period") { (year, period) =>
-        complete(mongoClient.semesterMarks(year, period))
+        withAccessControlAllowOrigin(mongoClient.semesterMarks(year, period))
       }
     } ~ path("statistic" / "groups_average") {
       parameter("faculty") { faculty =>
-        complete(mongoClient.groupsAverage(faculty))
+        withAccessControlAllowOrigin(mongoClient.groupsAverage(faculty))
       }
     } ~ path("statistic" / "faculty_average") {
-      complete(mongoClient.facultiesAverage)
+      withAccessControlAllowOrigin(mongoClient.facultiesAverage)
     }
   } ~ post {
     path("add_student") {
@@ -53,28 +60,28 @@ object Router extends Json4sSupport {
           student = Student(UUID.randomUUID().toString, name, surname, sex, groupNumbers)
           response <- mongoClient.addStudent(student)
         } yield response
-        complete(response.recover {
+        withAccessControlAllowOrigin(response.recover {
           case th: Throwable => th.getMessage
         })
       }
     } ~ path("add_course") {
       parameter('name) { name =>
         val course = Course(name)
-        complete(mongoClient.addCourse(course))
+        withAccessControlAllowOrigin(mongoClient.addCourse(course))
       }
     } ~ path("add_department") {
       parameter('name) { name =>
         val department = Department(name)
-        complete(mongoClient.addDepartment(department))
+        withAccessControlAllowOrigin(mongoClient.addDepartment(department))
       }
     } ~ path("add_faculty") {
       parameter('name) { name =>
         val faculty = Faculty(name)
-        complete(mongoClient.addFaculty(faculty))
+        withAccessControlAllowOrigin(mongoClient.addFaculty(faculty))
       }
     } ~ path("add_group") {
       parameters('number.as[Int], 'faculty, 'department) { (number, facultyName, departmentName) =>
-        complete((for {
+        withAccessControlAllowOrigin((for {
           faculty <- mongoClient.getFacultyByName(facultyName).map(faculty => if (faculty.isEmpty)
             throw new Exception(s"No such faculty $facultyName")
           else faculty.get)
@@ -89,11 +96,11 @@ object Router extends Json4sSupport {
     } ~ path("add_semester") {
       parameters('year.as[Int], 'period) { (year, period) =>
         val semester = Semester(year, period)
-        complete(mongoClient.addSemester(semester))
+        withAccessControlAllowOrigin(mongoClient.addSemester(semester))
       }
     } ~ path("add_mark") {
       parameter('studentId, 'course, 'mark.as[Int], 'year.as[Int], 'period) { (studentId, course, markValue, year, period) =>
-        complete((for {
+        withAccessControlAllowOrigin((for {
           semester <- mongoClient.getSemester(year, period).map(_.fold[Semester](
             throw new Exception(s"No such semester. Mark wasn't added"))(semester => semester))
           course <- mongoClient.getCourseByName(course).map(_.fold[Course](
