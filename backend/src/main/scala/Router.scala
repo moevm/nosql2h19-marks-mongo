@@ -25,6 +25,20 @@ object Router extends Json4sSupport {
       complete(mongoClient.getGroups)
     } ~ path("semesters") {
       complete(mongoClient.getSemesters)
+    } ~ path("statistic" / "faculty_marks") {
+      parameter("faculty") { faculty =>
+        complete(mongoClient.facultyMarks(faculty))
+      }
+    } ~ path("statistic" / "semester_marks") {
+      parameter("year".as[Int], "period") { (year, period) =>
+        complete(mongoClient.semesterMarks(year, period))
+      }
+    } ~ path("statistic" / "groups_average") {
+      parameter("faculty") { faculty =>
+        complete(mongoClient.groupsAverage(faculty))
+      }
+    } ~ path("statistic" / "faculty_average") {
+      complete(mongoClient.facultiesAverage)
     }
   } ~ post {
     path("add_student") {
