@@ -48,4 +48,8 @@ trait ClientMongo {
   def facultiesAverage: Future[Seq[FacultyAverage]]
 
   def groupsAverage(facultyName: String): Future[Seq[GroupAverage]]
+
+  def facultyGroups(facultyName: String): Future[Seq[Group]]
+
+  def groupStudents(groupNumber: Int): Future[Seq[Student]]
 }
