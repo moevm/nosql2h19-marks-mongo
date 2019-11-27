@@ -26,9 +26,7 @@ class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
   val semesters: MongoCollection[Document] = database.getCollection("semesters")
 
   override def addStudent(student: Student): Future[String] = {
-    students.insertOne(Document(student.asJson)).toFuture().recover {
-      case e: Throwable => s"Error: ${e.getMessage}"
-    }.map(_ => s"Student was added successfully")
+    students.insertOne(Document(student.asJson)).toFuture().map(_ => s"Student was added successfully")
   }
 
   override def getStudents: Future[Seq[Option[Student]]] = {
@@ -39,9 +37,7 @@ class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
   }
 
   override def addCourse(course: Course): Future[String] = {
-    courses.insertOne(Document(course.asJson)).toFuture().recover {
-      case e: Throwable => s"Error: ${e.getMessage}"
-    }.map(_ => s"Course was added succesfully")
+    courses.insertOne(Document(course.asJson)).toFuture().map(_ => s"Course was added succesfully")
   }
 
   override def getCourses: Future[Seq[Option[Course]]] = {
@@ -59,9 +55,7 @@ class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
   }
 
   override def addFaculty(faculty: Faculty): Future[String] = {
-    faculties.insertOne(Document(faculty.asJson)).toFuture().recover {
-      case e: Throwable => s"Error: ${e.getMessage}"
-    }.map(_ => s"Faculty was added succesfully")
+    faculties.insertOne(Document(faculty.asJson)).toFuture().map(_ => s"Faculty was added succesfully")
   }
 
   override def getFaculties: Future[Seq[Option[Faculty]]] = {
@@ -79,9 +73,7 @@ class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
   }
 
   override def addDepartment(department: Department): Future[String] = {
-    departments.insertOne(Document(department.asJson)).toFuture().recover {
-      case e: Throwable => s"Error: ${e.getMessage}"
-    }.map(_ => s"Department was added succesfully")
+    departments.insertOne(Document(department.asJson)).toFuture().map(_ => s"Department was added succesfully")
   }
 
   override def getDepartments: Future[Seq[Option[Department]]] = {
@@ -99,9 +91,7 @@ class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
   }
 
   override def addGroup(group: Group): Future[String] = {
-    groups.insertOne(Document(group.asJson)).toFuture().recover {
-      case e: Throwable => s"Error: ${e.getMessage}"
-    }.map(_ => s"Group was added succesfully")
+    groups.insertOne(Document(group.asJson)).toFuture().map(_ => s"Group was added succesfully")
   }
 
   override def getGroups: Future[Seq[Option[Group]]] = {
@@ -119,9 +109,7 @@ class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
   }
 
   override def addSemester(semester: Semester): Future[String] = {
-    semesters.insertOne(Document(semester.asJson)).toFuture().recover {
-      case e: Throwable => s"Error: ${e.getMessage}"
-    }.map(_ => s"Semester was added succesfully")
+    semesters.insertOne(Document(semester.asJson)).toFuture().map(_ => s"Semester was added succesfully")
   }
 
   override def getSemesters: Future[Seq[Option[Semester]]] = {
@@ -142,9 +130,8 @@ class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
   }
 
   override def addMark(studentId: String, mark: Mark): Future[String] = {
-    students.updateOne(equal("id", studentId), addToSet("marks", Document(mark.asJson))).toFuture().recover {
-      case e: Throwable => s"Error: ${e.getMessage}"
-    }.map(_ => s"Mark was added successfully")
+    students.updateOne(equal("id", studentId), addToSet("marks", Document(mark.asJson))).toFuture().map(_ =>
+      s"Mark was added successfully")
   }
 
   override def facultyMarks(facultyName: String): Future[Set[FacultyMarkStatistic]] = for {
