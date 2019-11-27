@@ -157,13 +157,14 @@ class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
     })
   } yield statistic
 
-  private def facultyGroups(facultyName: String): Future[Seq[Group]] = {
+  override def facultyGroups(facultyName: String): Future[Seq[Group]] = {
     groups.find(equal("nameFaculty", facultyName)).toFuture().map(_.flatMap(_.toJson().jsonAs[Group] match {
       case Right(group) => Some(group)
       case _ => None
     }))
   }
-  private def groupStudents(groupNumber: Int): Future[Seq[Student]] = for {
+
+  override def groupStudents(groupNumber: Int): Future[Seq[Student]] = for {
     allStudents <- getStudents.map(_.flatten)
     groupStudents = allStudents.filter(_.groups.contains(groupNumber))
   } yield groupStudents
