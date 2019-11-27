@@ -79,8 +79,10 @@
                                 required
                         ></b-form-input>
                     </b-form-group>
-
                 </form>
+                <div class="err">
+                    {{errorMessage}}
+                </div>
             </b-modal>
         </div>
     </div>
@@ -91,7 +93,7 @@
         name: "GroupSearch",
         data (){
             return {
-                perPage:3,
+                perPage:10,
                 currentPage: 1,
                 fields: [
                     {
@@ -115,21 +117,17 @@
                 numberState: null,
                 facultyState: null,
                 departmentState: null,
+                errorMessage: null
             }
         },
         mounted() {
-            this.updateGroups();
+            this.update();
         },
         methods: {
             checkFormValidity() {
                 let validNumber = this.$refs.number.checkValidity();
-                this.numberState = validNumber;
-                // eslint-disable-next-line no-console
-                console.log(typeof Number(this.number) + ': ' + Number(this.number));
                 if (!Number(this.number))
                     validNumber = false;
-                // eslint-disable-next-line no-console
-                // console.log('2: ' + validNumber);
                 this.numberState = validNumber;
 
                 let validFaculty = this.$refs.faculty.checkValidity();
@@ -147,37 +145,39 @@
                 this.facultyState = null;
                 this.numberState = null;
                 this.departmentState = null;
+                this.errorMessage = null;
             },
             handleOk(bvModalEvt) {
                 // Prevent modal from closing
                 bvModalEvt.preventDefault();
+                this.errorMessage = null;
 
                 if (!this.checkFormValidity()) {
                     return;
                 }
-
                 this.$client({
                     method: 'post',
-                    url:'/add_group',
+                    url: '/add_group',
                     params: {
                         number: this.number,
                         faculty: this.faculty,
                         department: this.department
                     }
                 })
-                .catch(function (er) {
-                    // eslint-disable-next-line no-console
-                    console.log(er)
-                })
-                .then(function () {
+                .then(() => (this.update()))
+                .catch((er) => this.errorMessage = er.response.data)
 
-                });
-                this.updateGroups();
+                if(!this.errorMessage){
+                    // eslint-disable-next-line no-console
+                    console.log(this.errorMessage);
+                    return;
+                }
+
                 this.$nextTick(() => {
                     this.$refs.modal.hide();
                 })
             },
-            updateGroups() {
+            update() {
                 this.$client
                     .get('/groups')
                     .then(response => {
@@ -191,5 +191,8 @@
 <style scoped>
     h2 {
         text-align: left;
+    }
+    .err {
+        color: darkred;
     }
 </style>
