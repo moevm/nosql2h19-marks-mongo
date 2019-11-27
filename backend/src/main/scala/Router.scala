@@ -60,9 +60,7 @@ object Router extends Json4sSupport {
           student = Student(UUID.randomUUID().toString, name, surname, sex, groupNumbers)
           response <- mongoClient.addStudent(student)
         } yield response
-        withAccessControlAllowOrigin(response.recover {
-          case th: Throwable => th.getMessage
-        })
+        withAccessControlAllowOrigin(response)
       }
     } ~ path("add_course") {
       parameter('name) { name =>
@@ -81,7 +79,7 @@ object Router extends Json4sSupport {
       }
     } ~ path("add_group") {
       parameters('number.as[Int], 'faculty, 'department) { (number, facultyName, departmentName) =>
-        withAccessControlAllowOrigin((for {
+        withAccessControlAllowOrigin(for {
           faculty <- mongoClient.getFacultyByName(facultyName).map(faculty => if (faculty.isEmpty)
             throw new Exception(s"No such faculty $facultyName")
           else faculty.get)
@@ -89,9 +87,7 @@ object Router extends Json4sSupport {
             throw new Exception(s"No such department $departmentName. Group wasn't added"))(department => department))
           group = Group(number, faculty.name, department.name)
           response <- mongoClient.addGroup(group)
-        } yield response).recover {
-          case th: Throwable => th.getMessage
-        })
+        } yield response)
       }
     } ~ path("add_semester") {
       parameters('year.as[Int], 'period) { (year, period) =>
@@ -100,7 +96,7 @@ object Router extends Json4sSupport {
       }
     } ~ path("add_mark") {
       parameter('studentId, 'course, 'mark.as[Int], 'year.as[Int], 'period) { (studentId, course, markValue, year, period) =>
-        withAccessControlAllowOrigin((for {
+        withAccessControlAllowOrigin(for {
           semester <- mongoClient.getSemester(year, period).map(_.fold[Semester](
             throw new Exception(s"No such semester. Mark wasn't added"))(semester => semester))
           course <- mongoClient.getCourseByName(course).map(_.fold[Course](
@@ -109,9 +105,7 @@ object Router extends Json4sSupport {
           _ = if (markValue < 1 || markValue > 5) throw new Exception("Mark isn't possible. Please use marks in range from 1 to 5") else ()
           mark = Mark(markValue, semester, course)
           response <- mongoClient.addMark(studentId, mark)
-        } yield response).recover {
-          case th: Throwable => th.getMessage
-        })
+        } yield response)
       }
     }
   }
