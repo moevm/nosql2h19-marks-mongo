@@ -68,7 +68,7 @@
                     <b-form-group
                             :state="departmentState"
                             label="Department"
-                            label-for="faculty-input"
+                            label-for="department-input"
                             invalid-feedback="Department is required"
                     >
                         <b-form-input
