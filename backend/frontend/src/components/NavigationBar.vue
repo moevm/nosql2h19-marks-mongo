@@ -20,15 +20,30 @@
               Groups
             </b-dropdown-item>
           </router-link>
+          <router-link to="/faculties" v-slot="{ href, navigate }">
+            <b-dropdown-item :href="href" @click="navigate">
+              Faculties
+            </b-dropdown-item>
+          </router-link>
+          <router-link to="/departments" v-slot="{ href, navigate }">
+            <b-dropdown-item :href="href" @click="navigate">
+              Departments
+            </b-dropdown-item>
+          </router-link>
+          <router-link to="/courses" v-slot="{ href, navigate }">
+            <b-dropdown-item :href="href" @click="navigate">
+              Courses
+            </b-dropdown-item>
+          </router-link>
+          <router-link to="/semesters" v-slot="{ href, navigate }">
+            <b-dropdown-item :href="href" @click="navigate">
+              Semesters
+            </b-dropdown-item>
+          </router-link>
         </b-nav-dropdown>
         <router-link to="/stats" v-slot="{ href, navigate }">
           <b-nav-item :href="href" @click="navigate">
             Statistics
-          </b-nav-item>
-        </router-link>
-        <router-link to="/about" v-slot="{ href, navigate }">
-          <b-nav-item :href="href" @click="navigate">
-            About
           </b-nav-item>
         </router-link>
       </b-navbar-nav>

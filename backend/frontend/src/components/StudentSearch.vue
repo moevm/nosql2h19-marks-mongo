@@ -14,6 +14,9 @@
             <template v-slot:cell(group)="data">
                 {{ data.item.groups[0]}}
             </template>
+            <template v-slot:cell(marks)="data">
+                {{ data.item.marks.map(mark => mark.mark).toString()}}
+            </template>
         </b-table>
         <div>
             <b-row class="w-100">
@@ -112,9 +115,9 @@
         name: "StudentSearch",
         data (){
             return {
-                perPage:3,
+                perPage:10,
                 currentPage: 1,
-                fields: ['name', 'surname', 'sex', 'group'],
+                fields: ['name', 'surname', 'sex', 'group', 'marks'],
                 students: [],
                 name: '',
                 surname:'',
