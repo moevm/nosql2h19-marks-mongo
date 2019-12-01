@@ -138,38 +138,43 @@ class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
       s"Mark was added successfully")
   }
 
-  override def facultyMarks(facultyName: String): Future[Set[FacultyMarkStatistic]] =
+  override def facultyMarks(facultyName: String): Future[Set[MarkStatistic]] =
     students.aggregate(Seq(
       lookup("groups", "group", "number", "group_full"),
       filter(equal("group_full.nameFaculty", facultyName)),
       unwind("$marks"),
       group(Map("mark" -> "$marks.mark", "sex"->"$sex"), sum("count", 1)),
       project(fields(computed("mark", "$_id.mark"), computed("sex", "$_id.sex"), include("count")))
-    )).toFuture().map(a => {
-      println(a)
-      a
-    }).map(_.flatMap(_.toJson().jsonAs[MarkCount] match {
+    )).toFuture().map(_.flatMap(_.toJson().jsonAs[MarkCount] match {
       case Right(markCount) => Some(markCount)
       case _ => None
-    }).toSet).map(marksCountToFacultyMarkStatistic)
+    }).toSet).map(marksCountToMarkStatistic)
 
-  override def semesterMarks(year: Int, period: String): Future[Set[FacultyMarkStatistic]] =
+  override def semesterMarks(year: Int, period: String): Future[Set[MarkStatistic]] =
     students.aggregate(Seq(
       filter(and(equal("marks.semester.year", year), equal("marks.semester.period", period))),
       unwind("$marks"),
       group(Map("mark" -> "$marks.mark", "sex" -> "$sex"), sum("count", 1)),
       project(fields(computed("mark", "$_id.mark"), computed("sex", "$_id.sex"), include("count")))
-    )).toFuture().map(a => {
-      println(a)
-      a
-    }).map(_.flatMap(_.toJson().jsonAs[MarkCount] match {
+    )).toFuture().map(_.flatMap(_.toJson().jsonAs[MarkCount] match {
       case Right(markCount) => Some(markCount)
       case _ => None
-    }).toSet).map(marksCountToFacultyMarkStatistic)
+    }).toSet).map(marksCountToMarkStatistic)
+
+  override def courseMarks(course: String): Future[Set[MarkStatistic]] =
+    students.aggregate(Seq(
+      filter(equal("marks.course.name", course)),
+      unwind("$marks"),
+      group(Map("mark" -> "$marks.mark", "sex"->"$sex"), sum("count", 1)),
+      project(fields(computed("mark", "$_id.mark"), computed("sex", "$_id.sex"), include("count")))
+    )).toFuture().map(_.flatMap(_.toJson().jsonAs[MarkCount] match {
+      case Right(markCount) => Some(markCount)
+      case _ => None
+    }).toSet).map(marksCountToMarkStatistic)
 
 
-  private def marksCountToFacultyMarkStatistic(marksCount: Set[MarkCount]) = {
-    marksCount.map(markCount => FacultyMarkStatistic(
+  private def marksCountToMarkStatistic(marksCount: Set[MarkCount]) = {
+    marksCount.map(markCount => MarkStatistic(
       mark = markCount.mark,
       boys = marksCount.find(mark => mark.mark == markCount.mark && mark.sex).map(_.count).getOrElse(0),
       girls = marksCount.find(mark => mark.mark == markCount.mark && !mark.sex).map(_.count).getOrElse(0),
@@ -243,6 +248,5 @@ object ClientMongoImpl {
 
   implicit val markCountReader: JsonReader[MarkCount] = jsonReader[MarkCount]
 
-  implicit val facultyMarkStatisticReader: JsonReader[FacultyMarkStatistic] = jsonReader[FacultyMarkStatistic]
-  implicit val facultyMarkStatisticWriter: JsonObjectWriter[FacultyMarkStatistic] = jsonWriter[FacultyMarkStatistic]
+  implicit val markStatisticWriter: JsonObjectWriter[MarkStatistic] = jsonWriter[MarkStatistic]
 }

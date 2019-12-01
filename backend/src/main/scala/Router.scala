@@ -47,7 +47,11 @@ object Router extends Json4sSupport {
         parameter("year".as[Int], "period") { (year, period) =>
           withAccessControlAllowOrigin(mongoClient.semesterMarks(year, period))
         }
-      } ~ path("statistic" / "groups_average") {
+      } ~ path("statistic" / "course_marks"){
+        parameter("course"){ course =>
+          withAccessControlAllowOrigin(mongoClient.courseMarks(course))
+        }
+      }~ path("statistic" / "groups_average") {
         parameter("faculty") { faculty =>
           withAccessControlAllowOrigin(mongoClient.groupsAverage(faculty))
         }
@@ -57,7 +61,7 @@ object Router extends Json4sSupport {
         parameter("group".as[Int])(groupNumber =>
           withAccessControlAllowOrigin(mongoClient.groupStudents(groupNumber))
         )
-      } ~ path("faculty_groups") {
+      }~ path("faculty_groups") {
         parameter("faculty")(faculty =>
           withAccessControlAllowOrigin(mongoClient.facultyGroups(faculty))
         )
