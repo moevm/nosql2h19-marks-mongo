@@ -4,5 +4,5 @@ case class Student(id: String,
                    name: String,
                    surname: String,
                    sex: Boolean,
-                   groups: Seq[Int],
+                   group: Int,
                    marks: Seq[Mark] = Seq.empty)

@@ -22,6 +22,16 @@
                     ></b-pagination>
                 </b-col>
                 <b-col>
+                    <b-button v-b-modal.modal-filter-group class="m-3">
+                        Filter
+                    </b-button>
+                </b-col>
+                <b-col>
+                    <b-button v-on:click="update" class="m-3">
+                        All
+                    </b-button>
+                </b-col>
+                <b-col>
                     <b-button v-b-modal.modal-adding-group class="m-3 float-right">Add</b-button>
                 </b-col>
             </b-row>
@@ -84,6 +94,34 @@
                     {{errorMessage}}
                 </div>
             </b-modal>
+            <b-modal
+                    id="modal-filter-group"
+                    ref="modalFilter"
+                    centered
+                    title="Faculty Filter"
+                    @show="resetModal"
+                    @hidden="resetModal"
+                    @ok="handleOkFilter"
+            >
+                <form ref="form">
+                    <b-form-group
+                            :state="facultyState"
+                            label="Faculty"
+                            label-for="faculty-input"
+                    >
+                        <b-form-input
+                                ref="facultyFilter"
+                                id="faculty-input"
+                                v-model="faculty"
+                                :state="facultyState"
+                                required
+                        ></b-form-input>
+                    </b-form-group>
+                </form>
+                <div class="err">
+                    {{errorMessage}}
+                </div>
+            </b-modal>
         </div>
     </div>
 </template>
@@ -138,6 +176,14 @@
 
                 return validNumber && validFaculty && validDepartment;
             },
+            checkFacultyFilterValidity() {
+                let validFaculty = this.$refs.facultyFilter.checkValidity();
+                validFaculty = this.groups.map(el => el.nameFaculty).includes(this.faculty);
+
+                this.facultyState = validFaculty;
+
+                return validFaculty;
+            },
             resetModal() {
                 this.number = '';
                 this.faculty = '';
@@ -170,6 +216,33 @@
                 if(!this.errorMessage){
                     // eslint-disable-next-line no-console
                     console.log(this.errorMessage);
+                    return;
+                }
+
+                this.$nextTick(() => {
+                    this.$refs.modal.hide();
+                })
+            },
+            handleOkFilter(bvModalEvt) {
+                // Prevent modal from closing
+                bvModalEvt.preventDefault();
+                this.errorMessage = null;
+
+                if (!this.checkFacultyFilterValidity()) {
+                    return;
+                }
+
+                this.$client({
+                    method: 'get',
+                    url: '/faculty_groups',
+                    params: {
+                        faculty: this.faculty
+                    }
+                })
+                    .then((res) => this.groups = res.data)
+                    .catch((er) => this.errorMessage = er.response.data)
+
+                if(!this.errorMessage){
                     return;
                 }
 
