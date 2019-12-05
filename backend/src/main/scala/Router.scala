@@ -1,14 +1,18 @@
 
+import java.io.File
 import java.util.UUID
 
 import Implicits._
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
-import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
+import akka.http.scaladsl.model.HttpEntity.ChunkStreamPart
+import akka.http.scaladsl.model.headers._
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
-import akka.http.scaladsl.model.headers._
+import akka.stream.scaladsl.Source
+import akka.util.ByteString
 import data._
-import mongo.ClientMongo
+import mongo.{ClientMongo, ClientMongoImpl}
 
 import scala.concurrent.Future
 
@@ -124,6 +128,18 @@ object Router extends Json4sSupport {
             response <- mongoClient.addMark(studentId, mark)
           } yield response)
         }
+      } ~ path("export") {
+        withAccessControlAllowOrigin(mongoClient.exportJson(ClientMongoImpl.students).map(file => {
+          val str = Source.single(ByteString(file))
+          /*getFromFile()
+          HttpEntity.fromFile(
+            ContentTypes.`application/json`,
+            file*/
+          HttpResponse(entity = HttpEntity.Chunked.fromData(ContentTypes.`application/octet-stream`,
+          ))
+          getFromFile(new File())
+        }
+        ))
       }
     }
   }

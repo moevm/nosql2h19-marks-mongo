@@ -1,29 +1,23 @@
 package mongo
 
+import java.io.{BufferedWriter, File, FileWriter}
+
 import data._
 import org.mongodb.scala._
+import org.mongodb.scala.model.Aggregates._
 import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Projections._
 import org.mongodb.scala.model.Updates._
 import tethys._
 import tethys.derivation.semiauto._
 import tethys.jackson._
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.io.Source
 
 class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
 
   import ClientMongoImpl._
-
-  private val mongoClient: MongoClient = MongoClient("mongodb://localhost")
-
-  private val database = mongoClient.getDatabase("test2")
-
-  val students: MongoCollection[Document] = database.getCollection("students")
-  val courses: MongoCollection[Document] = database.getCollection("courses")
-  val faculties: MongoCollection[Document] = database.getCollection("faculties")
-  val departments: MongoCollection[Document] = database.getCollection("departments")
-  val groups: MongoCollection[Document] = database.getCollection("groups")
-  val semesters: MongoCollection[Document] = database.getCollection("semesters")
 
   override def addStudent(student: Student): Future[String] = {
     students.insertOne(Document(student.asJson)).toFuture().map(_ => s"Student was added successfully")
@@ -189,9 +183,36 @@ class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
       GroupAverage(group, sum.toDouble / n)
     })
   } yield groupsAverage
+
+  def exportJson(collection: MongoCollection[Document]): Future[String] = {
+    //val file = new File("students_export.json")
+    //val bw = new BufferedWriter(new FileWriter(file))
+    collection.aggregate(Seq(
+      project(excludeId())
+    )).toFuture().map(seq => {
+      //new File()
+      /*val file = new File("export.json")
+      val fw = new FileWriter()
+      fw.write("[" + seq.map(_.toJson()).mkString(",\n") + "]")
+      file*/
+      "[" + seq.map(_.toJson()).mkString(",\n") + "]"
+    })
+  }
 }
 
 object ClientMongoImpl {
+
+  private val mongoClient: MongoClient = MongoClient("mongodb://localhost")
+
+  private val database = mongoClient.getDatabase("test2")
+
+  val students: MongoCollection[Document] = database.getCollection("students")
+  val courses: MongoCollection[Document] = database.getCollection("courses")
+  val faculties: MongoCollection[Document] = database.getCollection("faculties")
+  val departments: MongoCollection[Document] = database.getCollection("departments")
+  val groups: MongoCollection[Document] = database.getCollection("groups")
+  val semesters: MongoCollection[Document] = database.getCollection("semesters")
+
   implicit val semesterWriter: JsonObjectWriter[Semester] = jsonWriter[Semester]
   implicit val semesterReader: JsonReader[Semester] = jsonReader[Semester]
 
