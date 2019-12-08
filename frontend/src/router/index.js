@@ -1,11 +1,11 @@
 import VueRouter from 'vue-router';
 import IndexPage from "../components/IndexPage";
-import StudentSearch from "../components/StudentSearch";
-import GroupSearch from "../components/GroupSearch";
-import FacultySearch from "../components/FacultySearch";
-import DepartmentSearch from "../components/DepartmentsSearch";
-import CoursesSearch from "../components/CoursesSearch";
-import SemesterSearch from "../components/SemesterSearch";
+import StudentSearch from "../components/tables/StudentSearch";
+import GroupSearch from "../components/tables/GroupSearch";
+import FacultySearch from "../components/tables/FacultySearch";
+import DepartmentSearch from "../components/tables/DepartmentsSearch";
+import CoursesSearch from "../components/tables/CoursesSearch";
+import SemesterSearch from "../components/tables/SemesterSearch";
 import StatisticsPage from "../components/StatisticsPage";
 
 const routes = [
