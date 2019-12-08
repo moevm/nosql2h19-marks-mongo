@@ -1,16 +1,12 @@
 
-import java.io.File
 import java.util.UUID
 
 import Implicits._
 import akka.http.scaladsl.marshalling.ToResponseMarshallable
-import akka.http.scaladsl.model.HttpEntity.ChunkStreamPart
 import akka.http.scaladsl.model.headers._
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
+import akka.http.scaladsl.model.{HttpEntity, HttpResponse, MediaTypes, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ExceptionHandler, Route}
-import akka.stream.scaladsl.Source
-import akka.util.ByteString
 import data._
 import mongo.{ClientMongo, ClientMongoImpl}
 
@@ -30,6 +26,12 @@ object Router extends Json4sSupport {
     respondWithHeader(`Access-Control-Allow-Origin`.*) {
       complete(response)
     }
+
+  private def toFileResponse(filename: String, fileData: String): HttpResponse = {
+    val httpEntity = HttpEntity(MediaTypes.`application/json`, fileData)
+    val httpHeader = `Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> filename))
+    HttpResponse(entity = httpEntity, headers = List(httpHeader))
+  }
 
   def routes(mongoClient: ClientMongo): Route = handleExceptions(exceptionHandler) {
     get {
@@ -67,6 +69,36 @@ object Router extends Json4sSupport {
         parameter("faculty")(faculty =>
           withAccessControlAllowOrigin(mongoClient.facultyGroups(faculty))
         )
+      } ~ path("export" / "students") {
+        withAccessControlAllowOrigin(mongoClient.exportJson(ClientMongoImpl.students).map(fileData => {
+          toFileResponse("students.json", fileData)
+        }
+        ))
+      } ~ path("export" / "groups") {
+        withAccessControlAllowOrigin(mongoClient.exportJson(ClientMongoImpl.groups).map(fileData => {
+          toFileResponse("groups.json", fileData)
+        }
+        ))
+      } ~ path("export" / "semesters") {
+        withAccessControlAllowOrigin(mongoClient.exportJson(ClientMongoImpl.semesters).map(fileData => {
+          toFileResponse("semesters.json", fileData)
+        }
+        ))
+      } ~ path("export" / "courses") {
+        withAccessControlAllowOrigin(mongoClient.exportJson(ClientMongoImpl.courses).map(fileData => {
+          toFileResponse("courses.json", fileData)
+        }
+        ))
+      } ~ path("export" / "faculties") {
+        withAccessControlAllowOrigin(mongoClient.exportJson(ClientMongoImpl.faculties).map(fileData => {
+          toFileResponse("faculties.json", fileData)
+        }
+        ))
+      } ~ path("export" / "departments") {
+        withAccessControlAllowOrigin(mongoClient.exportJson(ClientMongoImpl.departments).map(fileData => {
+          toFileResponse("departments.json", fileData)
+        }
+        ))
       }
     } ~ post {
       path("add_student") {
@@ -128,18 +160,6 @@ object Router extends Json4sSupport {
             response <- mongoClient.addMark(studentId, mark)
           } yield response)
         }
-      } ~ path("export") {
-        withAccessControlAllowOrigin(mongoClient.exportJson(ClientMongoImpl.students).map(file => {
-          val str = Source.single(ByteString(file))
-          /*getFromFile()
-          HttpEntity.fromFile(
-            ContentTypes.`application/json`,
-            file*/
-          HttpResponse(entity = HttpEntity.Chunked.fromData(ContentTypes.`application/octet-stream`,
-          ))
-          getFromFile(new File())
-        }
-        ))
       }
     }
   }

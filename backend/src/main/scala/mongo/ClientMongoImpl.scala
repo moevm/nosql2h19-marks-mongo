@@ -1,7 +1,5 @@
 package mongo
 
-import java.io.{BufferedWriter, File, FileWriter}
-
 import data._
 import org.mongodb.scala._
 import org.mongodb.scala.model.Aggregates._
@@ -13,7 +11,6 @@ import tethys.derivation.semiauto._
 import tethys.jackson._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.io.Source
 
 class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
 
@@ -185,16 +182,9 @@ class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
   } yield groupsAverage
 
   def exportJson(collection: MongoCollection[Document]): Future[String] = {
-    //val file = new File("students_export.json")
-    //val bw = new BufferedWriter(new FileWriter(file))
     collection.aggregate(Seq(
       project(excludeId())
     )).toFuture().map(seq => {
-      //new File()
-      /*val file = new File("export.json")
-      val fw = new FileWriter()
-      fw.write("[" + seq.map(_.toJson()).mkString(",\n") + "]")
-      file*/
       "[" + seq.map(_.toJson()).mkString(",\n") + "]"
     })
   }
