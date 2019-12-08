@@ -178,7 +178,7 @@ class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
   }
 
   override def groupStudents(groupNumber: Int): Future[Seq[Student]] =
-    students.find(equal("groups", groupNumber)).toFuture().map(_.flatMap(_.toJson().jsonAs[Student] match {
+    students.find(equal("group", groupNumber)).toFuture().map(_.flatMap(_.toJson().jsonAs[Student] match {
       case Right(student) => Some(student)
       case _ => None
     }))
