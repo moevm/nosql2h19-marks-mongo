@@ -3,9 +3,9 @@ package mongo
 import data._
 import org.mongodb.scala._
 import org.mongodb.scala.model.Accumulators.{avg, sum}
-import org.mongodb.scala.model.Aggregates._
+import org.mongodb.scala.model.Aggregates.{project, _}
 import org.mongodb.scala.model.Filters._
-import org.mongodb.scala.model.Projections._
+import org.mongodb.scala.model.Projections.{excludeId, _}
 import org.mongodb.scala.model.Updates.addToSet
 import tethys._
 import tethys.derivation.semiauto._
@@ -16,18 +16,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
 
   import ClientMongoImpl._
-
-  private val mongoClient: MongoClient = MongoClient("mongodb://localhost")
-
-  private val database = mongoClient.getDatabase("test2")
-
-  val students: MongoCollection[Document] = database.getCollection("students")
-  val courses: MongoCollection[Document] = database.getCollection("courses")
-  val faculties: MongoCollection[Document] = database.getCollection("faculties")
-  val departments: MongoCollection[Document] = database.getCollection("departments")
-  val groups: MongoCollection[Document] = database.getCollection("groups")
-  val semesters: MongoCollection[Document] = database.getCollection("semesters")
-
 
   override def addStudent(student: Student): Future[String] = {
     students.insertOne(Document(student.asJson)).toFuture().map(_ => s"Student was added successfully")
@@ -190,7 +178,7 @@ class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
   }
 
   override def groupStudents(groupNumber: Int): Future[Seq[Student]] =
-    students.find(equal("groups", groupNumber)).toFuture().map(_.flatMap(_.toJson().jsonAs[Student] match {
+    students.find(equal("group", groupNumber)).toFuture().map(_.flatMap(_.toJson().jsonAs[Student] match {
       case Right(student) => Some(student)
       case _ => None
     }))
@@ -216,9 +204,29 @@ class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
       case Right(groupAverage) => Some(groupAverage)
       case _ => None
     }))
+
+  def exportJson(collection: MongoCollection[Document]): Future[String] = {
+    collection.aggregate(Seq(
+      project(excludeId())
+    )).toFuture().map(seq => {
+      "[" + seq.map(_.toJson()).mkString(",\n") + "]"
+    })
+  }
 }
 
 object ClientMongoImpl {
+
+  private val mongoClient: MongoClient = MongoClient("mongodb://localhost")
+
+  private val database = mongoClient.getDatabase("test2")
+
+  val students: MongoCollection[Document] = database.getCollection("students")
+  val courses: MongoCollection[Document] = database.getCollection("courses")
+  val faculties: MongoCollection[Document] = database.getCollection("faculties")
+  val departments: MongoCollection[Document] = database.getCollection("departments")
+  val groups: MongoCollection[Document] = database.getCollection("groups")
+  val semesters: MongoCollection[Document] = database.getCollection("semesters")
+
   implicit val semesterWriter: JsonObjectWriter[Semester] = jsonWriter[Semester]
   implicit val semesterReader: JsonReader[Semester] = jsonReader[Semester]
 

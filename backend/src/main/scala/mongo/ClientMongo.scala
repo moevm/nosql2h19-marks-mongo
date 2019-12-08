@@ -1,6 +1,7 @@
 package mongo
 
-import data.{Course, Department, Faculty, FacultyAverage, Group, GroupAverage, Mark, MarkStatistic, Semester, Student}
+import data._
+import org.mongodb.scala.{Document, MongoCollection}
 
 import scala.concurrent.Future
 
@@ -54,4 +55,6 @@ trait ClientMongo {
   def groupStudents(groupNumber: Int): Future[Seq[Student]]
 
   def courseMarks(course: String): Future[Set[MarkStatistic]]
+
+  def exportJson(collection: MongoCollection[Document]): Future[String]
 }
