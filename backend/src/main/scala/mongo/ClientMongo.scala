@@ -2,6 +2,7 @@ package mongo
 
 import data._
 import org.mongodb.scala.{Document, MongoCollection}
+import tethys.{JsonReader, JsonWriter}
 
 import scala.concurrent.Future
 
@@ -57,4 +58,6 @@ trait ClientMongo {
   def courseMarks(course: String): Future[Set[MarkStatistic]]
 
   def exportJson(collection: MongoCollection[Document]): Future[String]
+
+  def importJson[A](collection: MongoCollection[Document], data: String)(implicit reader: JsonReader[A], writer: JsonWriter[A]): Future[String]
 }
