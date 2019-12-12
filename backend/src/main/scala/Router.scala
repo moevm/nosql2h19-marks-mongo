@@ -32,7 +32,7 @@ object Router extends Json4sSupport {
   }
 
   def routes(mongoClient: ClientMongo): Route = handleExceptions(exceptionHandler) {
-    get {
+    Import.routes(mongoClient) ~ get {
       path("students") {
         withAccessControlAllowOrigin(mongoClient.getStudents)
       } ~ path("courses") {
