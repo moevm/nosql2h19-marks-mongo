@@ -42,7 +42,27 @@
                 <b-col>
                     <b-button v-b-modal.modal-adding-student class="m-3 float-right">Add</b-button>
                 </b-col>
+                <b-col>
+                    <b-button v-on:click="getExportJson" class="m-3">
+                        Export
+                    </b-button>
+                </b-col>
             </b-row>
+            <b-form>
+                <b-row class="w-100">
+                    <b-col md="9">
+                        <b-form-group label="Import:" label-for="file-default" label-cols-sm="2">
+                            <b-form-file id="file-default" v-model="file">
+<!--                                ref="file" v-on:change="handleFileUpload()"-->
+                            </b-form-file>
+                        </b-form-group>
+                        <div class="mt-3">Selected file: {{ file ? file.name : '' }}</div>
+                    </b-col>
+                    <b-col md="3">
+                        <b-button type="submit" variant="primary" v-on:click="submitFile">Import</b-button>
+                    </b-col>
+                </b-row>
+            </b-form>
         </div>
         <div>
             <b-modal
@@ -166,7 +186,8 @@
                 surnameState:null,
                 sexfState:null,
                 groupState:null,
-                errorMessage: null
+                errorMessage: null,
+                file: null
             }
         },
         methods: {
@@ -282,6 +303,42 @@
                 if(this.sexf === 'M')
                     return 1;
                 return 0;
+            },
+            getExportJson() {
+                this.$client
+                    .get('/export/students')
+                    .then(response => {
+                        // eslint-disable-next-line no-console
+                        console.log(response.data.toString())
+                        this.download(response.data)
+                    })
+            },
+            download(data) {
+                let element = document.createElement('a');
+                element.setAttribute('href', 'data:text/plain;charset=utf-8,' + JSON.stringify(data));
+                element.setAttribute('download', 'filename.json');
+
+                element.style.display = 'none';
+                document.body.appendChild(element);
+
+                element.click();
+
+                document.body.removeChild(element);
+            },
+            handleFileUpload() {
+                this.file = this.$refs.file.files[0]
+            },
+            submitFile() {
+                let fd = new FormData();
+                fd.append('students', this.file);
+                // eslint-disable-next-line no-console
+                console.log(fd)
+
+                this.$client.post('/import/students', fd)
+                    .then(response => {
+                        // eslint-disable-next-line no-console
+                        console.log(response.data)
+                    });
             }
         },
         mounted() {
