@@ -2,57 +2,51 @@ import Implicits._
 import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.server.Directives._
-import akka.util.ByteString
-import data.Student
+import data.{Course, Department, Faculty, Group, Semester, Student}
 import mongo.ClientMongo
 import mongo.ClientMongoImpl._
+import org.mongodb.scala.MongoCollection
+import org.mongodb.scala.Document
+import tethys.{JsonReader, JsonWriter}
+
+import scala.concurrent.Future
 
 object Import {
 
   def routes(mongoClient: ClientMongo) = {
     path("import" / "students") {
-      entity(as[Multipart.FormData]) { (formdata: Multipart.FormData) =>
+      importJson[Student](mongoClient, students)
+    } ~ path("import" / "groups") {
+      importJson[Group](mongoClient, groups)
+    } ~ path("import" / "departments") {
+      importJson[Department](mongoClient, departments)
+    } ~ path("import" / "faculties") {
+      importJson[Faculty](mongoClient, faculties)
+    } ~ path("import" / "courses") {
+      importJson[Course](mongoClient, courses)
+    } ~ path("import" / "semesters") {
+      importJson[Semester](mongoClient, semesters)
+    }
+  }
 
-        val fileNamesFuture = formdata.parts.mapAsync(1) { p ⇒
-          println(s"Got part. name: ${p.name} filename: ${p.filename}")
+  private def importJson[Entity](mongoClient: ClientMongo, mongoCollection: MongoCollection[Document])
+                                (implicit writer: JsonWriter[Entity], reader: JsonReader[Entity]) = {
+    entity(as[Multipart.FormData]) { (formdata: Multipart.FormData) =>
 
-          p.entity.dataBytes.map(a => println(a.utf8String))
-          println("Counting size...")
-          var lastReport = System.currentTimeMillis()
-          var lastSize = 0L
+      val result = formdata.parts.mapAsync(1) { p ⇒
 
-          def receiveChunk(counter: (Long, Long, String), chunk: ByteString): (Long, Long, String) = {
-            println(chunk.utf8String)
-            val (oldSize, oldChunks, str) = counter
-            val newSize = oldSize + chunk.size
-            val newChunks = oldChunks + 1
+        p.entity.dataBytes.runFold("")(_ + _.utf8String).map {
+          case (str) ⇒
+            mongoClient.importJson[Entity](mongoCollection, str).map(p.getFilename() + " – " + _)
+        }
+      }.runFold(Future.successful(Seq.empty[String]))((res, str) => for {
+        a <- res
+        b <- str
+      } yield a :+ b).flatMap(_.map(_.mkString(", ")))
 
-            val now = System.currentTimeMillis()
-            if (now > lastReport + 1000) {
-              val lastedTotal = now - lastReport
-              val bytesSinceLast = newSize - lastSize
-              val speedMBPS = bytesSinceLast.toDouble / 1000000 //* bytes per MB  / lastedTotal * 1000  millis per second
-
-              println(f"Already got $newChunks%7d chunks with total size $newSize%11d bytes avg chunksize ${newSize / newChunks}%7d bytes/chunk speed: $speedMBPS%6.2f MB/s")
-
-              lastReport = now
-              lastSize = newSize
-            }
-            (newSize, newChunks, str + chunk.utf8String)
-          }
-
-          p.entity.dataBytes.runFold((0L, 0L, ""))(receiveChunk).map {
-            case (size, numChunks, str) ⇒
-              println(s"Size is $size")
-              mongoClient.importJson[Student](students, str).foreach(println)
-              (p.name, p.filename, size)
-          }
-        }.runFold(Seq.empty[(String, Option[String], Long)])(_ :+ _).map(_.mkString(", "))
-
-        respondWithHeader(`Access-Control-Allow-Origin`.*) {
-          complete {
-            "Ок"
-          }
+      respondWithHeader(`Access-Control-Allow-Origin`.*) {
+        complete {
+          result
         }
       }
     }
