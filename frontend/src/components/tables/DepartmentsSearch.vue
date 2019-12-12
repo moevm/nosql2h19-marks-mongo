@@ -29,7 +29,26 @@
                 <b-col>
                     <b-button v-b-modal.modal-adding-department class="m-3 float-right">Add</b-button>
                 </b-col>
+
+                <b-col>
+                    <b-button v-on:click="getExportJson" class="m-3">
+                        Export
+                    </b-button>
+                </b-col>
             </b-row>
+            <b-form>
+                <b-row class="w-100">
+                    <b-col md="9">
+                        <b-form-group label="Import:" label-for="file-default" label-cols-sm="2">
+                            <b-form-file id="file-default" v-model="file">
+                            </b-form-file>
+                        </b-form-group>
+                    </b-col>
+                    <b-col md="3">
+                        <b-button type="submit" variant="primary" v-on:click="submitFile">Import</b-button>
+                    </b-col>
+                </b-row>
+            </b-form>
         </div>
         <div>
             <b-modal
@@ -77,7 +96,8 @@
                 ],
                 departments: [],
                 name: '',
-                nameState: null
+                nameState: null,
+                file: null
             }
         },
         mounted() {
@@ -121,6 +141,39 @@
                     .get('/departments')
                     .then(response => {
                         this.departments = response.data;
+                    });
+            },
+            getExportJson() {
+                this.$client
+                    .get('/export/departments')
+                    .then(response => {
+                        // eslint-disable-next-line no-console
+                        console.log(response.data.toString())
+                        this.download(response.data)
+                    })
+            },
+            download(data) {
+                let element = document.createElement('a');
+                element.setAttribute('href', 'data:text/plain;charset=utf-8,' + JSON.stringify(data));
+                element.setAttribute('download', 'filename.json');
+
+                element.style.display = 'none';
+                document.body.appendChild(element);
+
+                element.click();
+
+                document.body.removeChild(element);
+            },
+            submitFile() {
+                let fd = new FormData();
+                fd.append('departments', this.file);
+                // eslint-disable-next-line no-console
+                console.log(fd)
+
+                this.$client.post('/import/departments', fd)
+                    .then(response => {
+                        // eslint-disable-next-line no-console
+                        console.log(response.data)
                     });
             }
         }

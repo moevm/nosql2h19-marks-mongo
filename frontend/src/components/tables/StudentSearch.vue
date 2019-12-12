@@ -11,9 +11,6 @@
             <template v-slot:cell(sex)="data">
                 {{ data.item.sex ? 'M' : 'W'}}
             </template>
-<!--            <template v-slot:cell(group)="data">-->
-<!--                {{ data.item.group}}-->
-<!--            </template>-->
             <template v-slot:cell(marks)="data">
                 {{ data.item.marks.map(mark => mark.mark).toString()}}
             </template>
@@ -53,10 +50,8 @@
                     <b-col md="9">
                         <b-form-group label="Import:" label-for="file-default" label-cols-sm="2">
                             <b-form-file id="file-default" v-model="file">
-<!--                                ref="file" v-on:change="handleFileUpload()"-->
                             </b-form-file>
                         </b-form-group>
-                        <div class="mt-3">Selected file: {{ file ? file.name : '' }}</div>
                     </b-col>
                     <b-col md="3">
                         <b-button type="submit" variant="primary" v-on:click="submitFile">Import</b-button>
@@ -324,9 +319,6 @@
                 element.click();
 
                 document.body.removeChild(element);
-            },
-            handleFileUpload() {
-                this.file = this.$refs.file.files[0]
             },
             submitFile() {
                 let fd = new FormData();
