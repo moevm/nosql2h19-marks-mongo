@@ -212,6 +212,15 @@ class ClientMongoImpl(implicit ec: ExecutionContext) extends ClientMongo {
       "[" + seq.map(_.toJson()).mkString(",\n") + "]"
     })
   }
+
+  def importJson[A](collection: MongoCollection[Document], data: String)(implicit reader: JsonReader[A], writer: JsonWriter[A]): Future[String] = {
+    val seq = data.jsonAs[Seq[A]] match {
+      case Right(value) => Some(value)
+      case _ => None
+    }
+    val documents = seq.getOrElse(throw new Exception("Exception during import")).map(value => Document(value.asJson))
+    collection.insertMany(documents).toFuture().map(_ => "Ok")
+  }
 }
 
 object ClientMongoImpl {
